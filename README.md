@@ -20,10 +20,8 @@
 **Banking API** is a backend service that models the core domain of a bank: **users** own
 **accounts**, and accounts exchange money through **transactions** (deposits, withdrawals, and
 transfers). The codebase follows a clean, layered architecture (Controller → Service → Repository)
-with DTO-based boundaries and BCrypt-secured credentials.
-
-> ⚠️ **Project status:** Active development. The domain model, persistence, security, and service
-> layer are in place; REST controllers are being wired up next.
+with DTO-based boundaries and BCrypt-secured credentials. The full REST surface is exposed and
+documented interactively via **Swagger UI / OpenAPI**.
 
 ---
 
@@ -33,6 +31,7 @@ with DTO-based boundaries and BCrypt-secured credentials.
 - 💳 **Account management** — checking & savings accounts linked to users
 - 💸 **Transactions** — deposits, withdrawals, and account-to-account transfers
 - 🔐 **Security** — passwords hashed with BCrypt via Spring Security
+- 📖 **Interactive API docs** — Swagger UI powered by springdoc OpenAPI
 - 🧱 **Clean architecture** — clear separation between web, service, and data layers
 - 📦 **DTO-driven API** — request/response models decoupled from JPA entities
 - ✅ **Validation** — request payloads validated with Jakarta Bean Validation
@@ -48,6 +47,7 @@ with DTO-based boundaries and BCrypt-secured credentials.
 | Framework        | Spring Boot 4.1.0 (Web MVC, Data JPA, Security) |
 | Persistence      | Spring Data JPA + Hibernate                    |
 | Database         | H2 (in-memory, with H2 console)               |
+| API docs         | springdoc OpenAPI + Swagger UI                 |
 | Validation       | Jakarta Bean Validation                        |
 | Boilerplate      | Project Lombok                                 |
 | Build            | Maven (with wrapper)                           |
@@ -74,6 +74,7 @@ User ──1───*── Account ──*───1── Transaction
 src/main/java/com/banking/api
 ├── BankingApiApplication.java     # Application entry point
 ├── config/                        # Spring configuration (security, beans)
+├── controller/                    # REST controllers (users, accounts, transactions)
 ├── model/                         # JPA entities & enums
 ├── repository/                    # Spring Data JPA repositories
 ├── service/                       # Service interfaces
@@ -118,6 +119,17 @@ java -jar target/banking-api-0.0.1-SNAPSHOT.jar
 
 ---
 
+## 📖 API Documentation (Swagger)
+
+Once the app is running, explore and try every endpoint interactively:
+
+```
+Swagger UI:  http://localhost:8080/swagger-ui.html
+OpenAPI doc: http://localhost:8080/v3/api-docs
+```
+
+---
+
 ## 🗄️ H2 Console
 
 While the app is running, browse the in-memory database at:
@@ -128,23 +140,21 @@ http://localhost:8080/h2-console
 
 ---
 
-## 📡 API Endpoints (planned)
+## 📡 API Endpoints
 
-> Controllers are under construction — the planned surface, derived from the service layer:
-
-| Method   | Endpoint                          | Description                  |
-| -------- | --------------------------------- | ---------------------------- |
-| `POST`   | `/api/users`                      | Create a user                |
-| `GET`    | `/api/users`                      | List all users               |
-| `GET`    | `/api/users/{id}`                 | Get a user by ID             |
-| `DELETE` | `/api/users/{id}`                 | Delete a user                |
-| `POST`   | `/api/accounts`                   | Open an account              |
-| `GET`    | `/api/accounts/{id}`              | Get an account by ID         |
-| `GET`    | `/api/users/{id}/accounts`        | List a user's accounts       |
-| `DELETE` | `/api/accounts/{id}`              | Close an account             |
-| `POST`   | `/api/transactions`               | Create a transaction         |
-| `GET`    | `/api/transactions/{id}`          | Get a transaction by ID      |
-| `GET`    | `/api/accounts/{id}/transactions` | List an account's transactions |
+| Method   | Endpoint                            | Description                    |
+| -------- | ----------------------------------- | ------------------------------ |
+| `POST`   | `/api/users`                        | Create a user                  |
+| `GET`    | `/api/users`                        | List all users                 |
+| `GET`    | `/api/users/{id}`                   | Get a user by ID               |
+| `DELETE` | `/api/users/{id}`                   | Delete a user                  |
+| `POST`   | `/api/accounts`                     | Open an account                |
+| `GET`    | `/api/accounts/{id}`                | Get an account by ID           |
+| `GET`    | `/api/accounts/user/{id}`           | List a user's accounts         |
+| `DELETE` | `/api/accounts/{id}`                | Close an account               |
+| `POST`   | `/api/transactions`                 | Create a transaction           |
+| `GET`    | `/api/transactions/{id}`            | Get a transaction by ID        |
+| `GET`    | `/api/transactions/account/{id}`    | List an account's transactions |
 
 ---
 
