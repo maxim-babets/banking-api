@@ -3,8 +3,10 @@ package com.banking.api.service.impl;
 import com.banking.api.dto.user.UserRequestDTO;
 import com.banking.api.dto.user.UserResponseDTO;
 import com.banking.api.model.User;
+import com.banking.api.repository.AccountRepository;
 import com.banking.api.repository.UserRepository;
 import com.banking.api.service.UserService;
+import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,10 +19,12 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AccountRepository accountRepository;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, AccountRepository accountRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.accountRepository = accountRepository;
     }
 
     @Override
@@ -57,10 +61,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void deleteUser(Long id) {
     User user = userRepository.findById(id)
             .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "User not found with id: " + id));
+    accountRepository.deleteByUserId(id);
     userRepository.delete(user);
     }
 }

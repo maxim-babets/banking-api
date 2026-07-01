@@ -9,11 +9,13 @@ import com.banking.api.repository.AccountRepository;
 import com.banking.api.repository.TransactionRepository;
 import com.banking.api.service.TransactionService;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Service
 public class TransactionServiceImpl implements TransactionService {
 
 
