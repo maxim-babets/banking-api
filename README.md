@@ -10,6 +10,7 @@
   <img alt="Spring Boot" src="https://img.shields.io/badge/Spring%20Boot-4.1.0-6DB33F?style=flat-square&logo=springboot&logoColor=white">
   <img alt="Maven" src="https://img.shields.io/badge/Maven-build-C71A36?style=flat-square&logo=apachemaven&logoColor=white">
   <img alt="H2" src="https://img.shields.io/badge/Database-H2-09476B?style=flat-square&logo=h2database&logoColor=white">
+  <img alt="JWT" src="https://img.shields.io/badge/Auth-JWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white">
   <img alt="License" src="https://img.shields.io/badge/License-MIT-blue?style=flat-square">
 </p>
 
@@ -20,8 +21,9 @@
 **Banking API** is a backend service that models the core domain of a bank: **users** own
 **accounts**, and accounts exchange money through **transactions** (deposits, withdrawals, and
 transfers). The codebase follows a clean, layered architecture (Controller → Service → Repository)
-with DTO-based boundaries and BCrypt-secured credentials. The full REST surface is exposed and
-documented interactively via **Swagger UI / OpenAPI**.
+with DTO-based boundaries and BCrypt-secured credentials. Authentication is handled with
+**stateless JWT tokens**, and the full REST surface is exposed and documented interactively via
+**Swagger UI / OpenAPI**.
 
 ---
 
@@ -30,6 +32,7 @@ documented interactively via **Swagger UI / OpenAPI**.
 - 👤 **User management** — create, fetch, list, and delete users
 - 💳 **Account management** — checking & savings accounts linked to users
 - 💸 **Transactions** — deposits, withdrawals, and account-to-account transfers
+- 🔑 **JWT authentication** — stateless login issuing signed Bearer tokens (24h expiry)
 - 🔐 **Security** — passwords hashed with BCrypt via Spring Security
 - 📖 **Interactive API docs** — Swagger UI powered by springdoc OpenAPI
 - 🧱 **Clean architecture** — clear separation between web, service, and data layers
@@ -45,6 +48,7 @@ documented interactively via **Swagger UI / OpenAPI**.
 | ---------------- | -------------------------------------------- |
 | Language         | Java 21                                       |
 | Framework        | Spring Boot 4.1.0 (Web MVC, Data JPA, Security) |
+| Authentication   | JWT (jjwt 0.13) + Spring Security               |
 | Persistence      | Spring Data JPA + Hibernate                    |
 | Database         | H2 (in-memory, with H2 console)               |
 | API docs         | springdoc OpenAPI + Swagger UI                 |
@@ -74,12 +78,13 @@ User ──1───*── Account ──*───1── Transaction
 src/main/java/com/banking/api
 ├── BankingApiApplication.java     # Application entry point
 ├── config/                        # Spring configuration (security, beans)
-├── controller/                    # REST controllers (users, accounts, transactions)
+├── controller/                    # REST controllers (auth, users, accounts, transactions)
+├── security/                      # JWT service & authentication filter
 ├── model/                         # JPA entities & enums
 ├── repository/                    # Spring Data JPA repositories
 ├── service/                       # Service interfaces
 │   └── impl/                      # Service implementations
-└── dto/                           # Request/response DTOs (user, account, transaction)
+└── dto/                           # Request/response DTOs (auth, user, account, transaction)
 ```
 
 ---
@@ -140,10 +145,43 @@ http://localhost:8080/h2-console
 
 ---
 
+## 🔑 Authentication
+
+Log in with an existing user's credentials to receive a signed JWT, then send it as a
+**Bearer token** on subsequent requests.
+
+```bash
+# 1. Log in and get a token
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "john@example.com", "password": "secret"}'
+```
+
+```jsonc
+// Response
+{
+  "userId": 1,
+  "email": "john@example.com",
+  "message": "Login successful",
+  "token": "eyJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+```bash
+# 2. Use the token on protected requests
+curl http://localhost:8080/api/users \
+  -H "Authorization: Bearer <token>"
+```
+
+> Tokens are HMAC-SHA256 signed and valid for **24 hours**.
+
+---
+
 ## 📡 API Endpoints
 
 | Method   | Endpoint                            | Description                    |
 | -------- | ----------------------------------- | ------------------------------ |
+| `POST`   | `/api/auth/login`                   | Authenticate & receive a JWT   |
 | `POST`   | `/api/users`                        | Create a user                  |
 | `GET`    | `/api/users`                        | List all users                 |
 | `GET`    | `/api/users/{id}`                   | Get a user by ID               |
