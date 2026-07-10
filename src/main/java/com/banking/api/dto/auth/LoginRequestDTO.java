@@ -1,5 +1,6 @@
-package com.banking.api.dto.user;
+package com.banking.api.dto.auth;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
@@ -7,6 +8,7 @@ import lombok.Data;
 public class LoginRequestDTO {
 
     @NotBlank
+    @Email
     private String email;
     @NotBlank
     private String password;
