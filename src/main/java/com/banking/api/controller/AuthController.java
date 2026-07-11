@@ -2,6 +2,8 @@ package com.banking.api.controller;
 
 import com.banking.api.dto.auth.LoginRequestDTO;
 import com.banking.api.dto.auth.LoginResponse;
+import com.banking.api.dto.user.UserRequestDTO;
+import com.banking.api.dto.user.UserResponseDTO;
 import com.banking.api.service.AuthService;
 
 import jakarta.validation.Valid;
@@ -25,5 +27,8 @@ public class AuthController {
         return authService.login(request);
 
     }
-
+    @PostMapping("/register")
+    public UserResponseDTO register(@Valid @RequestBody UserRequestDTO request){
+        return authService.register(request);
+    }
 }

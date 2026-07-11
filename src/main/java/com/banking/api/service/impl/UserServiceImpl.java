@@ -2,6 +2,7 @@ package com.banking.api.service.impl;
 
 import com.banking.api.dto.user.UserRequestDTO;
 import com.banking.api.dto.user.UserResponseDTO;
+import com.banking.api.model.RoleType;
 import com.banking.api.model.User;
 import com.banking.api.repository.AccountRepository;
 import com.banking.api.repository.UserRepository;
@@ -33,6 +34,7 @@ public class UserServiceImpl implements UserService {
         user.setEmail(request.getEmail());
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
+        user.setRole(RoleType.USER);
 
         String hashedPassword = passwordEncoder.encode(request.getPassword());
         user.setPassword(hashedPassword);
@@ -41,14 +43,15 @@ public class UserServiceImpl implements UserService {
         return new UserResponseDTO(savedUser.getId(),
                 savedUser.getFirstName(),
                 savedUser.getLastName(),
-                savedUser.getEmail());
+                savedUser.getEmail(),
+                savedUser.getRole());
     }
 
     @Override
     public UserResponseDTO getUserById(Long id) {
         User user  = userRepository.findById(id).orElseThrow(()->
                 new ResponseStatusException(HttpStatus.NOT_FOUND, " User not found with id: " +  id));
-        return new UserResponseDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail());
+        return new UserResponseDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(),user.getRole());
     }
 
     @Override
@@ -56,7 +59,7 @@ public class UserServiceImpl implements UserService {
         List<User> users = userRepository.findAll();
 
         return users.stream()
-                .map(user -> new UserResponseDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail()))
+                .map(user -> new UserResponseDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(),user.getRole()))
                 .toList();
     }
 

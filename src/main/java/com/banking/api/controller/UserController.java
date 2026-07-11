@@ -18,11 +18,6 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping
-    public UserResponseDTO createUser(@Valid @RequestBody UserRequestDTO request){
-        return userService.createUser(request);
-    }
-
     @GetMapping("/{id}")
     public  UserResponseDTO getUserById(@PathVariable Long id){
         return userService.getUserById(id);
