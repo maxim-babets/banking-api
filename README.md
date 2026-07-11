@@ -22,18 +22,20 @@
 **accounts**, and accounts exchange money through **transactions** (deposits, withdrawals, and
 transfers). The codebase follows a clean, layered architecture (Controller → Service → Repository)
 with DTO-based boundaries and BCrypt-secured credentials. Authentication is handled with
-**stateless JWT tokens**, and the full REST surface is exposed and documented interactively via
-**Swagger UI / OpenAPI**.
+**stateless JWT tokens** and **role-based access control** (USER / ADMIN), and the full REST
+surface is documented interactively via **Swagger UI / OpenAPI** — complete with a built-in
+*Authorize* button for testing secured endpoints.
 
 ---
 
 ## 🚀 Features
 
-- 👤 **User management** — create, fetch, list, and delete users
+- 👤 **User management** — register, fetch, list, and delete users
 - 💳 **Account management** — checking & savings accounts linked to users
 - 💸 **Transactions** — deposits, withdrawals, and account-to-account transfers
-- 🔑 **JWT authentication** — stateless login issuing signed Bearer tokens (24h expiry)
-- 🔐 **Security** — passwords hashed with BCrypt via Spring Security
+- 🔑 **JWT authentication** — stateless register/login issuing signed Bearer tokens (24h expiry)
+- 🛡️ **Role-based access control** — `USER` / `ADMIN` roles enforced per endpoint
+- 🔐 **Security** — passwords hashed with BCrypt, endpoints guarded by a JWT filter
 - 📖 **Interactive API docs** — Swagger UI powered by springdoc OpenAPI
 - 🧱 **Clean architecture** — clear separation between web, service, and data layers
 - 📦 **DTO-driven API** — request/response models decoupled from JPA entities
@@ -65,7 +67,7 @@ User ──1───*── Account ──*───1── Transaction
                             (fromAccount / toAccount)
 ```
 
-- **User** — `firstName`, `lastName`, `email`, `password`, and a list of accounts
+- **User** — `firstName`, `lastName`, `email`, `password`, `role` (`USER` | `ADMIN`), and a list of accounts
 - **Account** — `accountNumber`, `balance`, `accountType` (`CHECKING` | `SAVINGS`), owned by a user
 - **Transaction** — `amount`, `dateTime`, `transactionType` (`DEPOSIT` | `WITHDRAWAL` | `TRANSFER`),
   with source and destination accounts
@@ -147,18 +149,24 @@ http://localhost:8080/h2-console
 
 ## 🔑 Authentication
 
-Log in with an existing user's credentials to receive a signed JWT, then send it as a
-**Bearer token** on subsequent requests.
+Register (or log in) to receive a signed JWT, then send it as a **Bearer token** on every
+protected request. Only `/api/auth/**`, Swagger, and the H2 console are public — everything
+else requires a valid token, and `GET /api/users` additionally requires the `ADMIN` role.
 
 ```bash
-# 1. Log in and get a token
+# 1. Register a new user
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"firstName": "John", "lastName": "Doe", "email": "john@example.com", "password": "secret"}'
+
+# 2. Log in and get a token
 curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "john@example.com", "password": "secret"}'
 ```
 
 ```jsonc
-// Response
+// Login response
 {
   "userId": 1,
   "email": "john@example.com",
@@ -168,31 +176,34 @@ curl -X POST http://localhost:8080/api/auth/login \
 ```
 
 ```bash
-# 2. Use the token on protected requests
-curl http://localhost:8080/api/users \
+# 3. Use the token on protected requests
+curl http://localhost:8080/api/accounts/1 \
   -H "Authorization: Bearer <token>"
 ```
 
-> Tokens are HMAC-SHA256 signed and valid for **24 hours**.
+> Tokens are HMAC-SHA256 signed and valid for **24 hours**. In Swagger UI, click **Authorize**
+> and paste the token to try secured endpoints straight from the browser.
 
 ---
 
 ## 📡 API Endpoints
 
-| Method   | Endpoint                            | Description                    |
-| -------- | ----------------------------------- | ------------------------------ |
-| `POST`   | `/api/auth/login`                   | Authenticate & receive a JWT   |
-| `POST`   | `/api/users`                        | Create a user                  |
-| `GET`    | `/api/users`                        | List all users                 |
-| `GET`    | `/api/users/{id}`                   | Get a user by ID               |
-| `DELETE` | `/api/users/{id}`                   | Delete a user                  |
-| `POST`   | `/api/accounts`                     | Open an account                |
-| `GET`    | `/api/accounts/{id}`                | Get an account by ID           |
-| `GET`    | `/api/accounts/user/{id}`           | List a user's accounts         |
-| `DELETE` | `/api/accounts/{id}`                | Close an account               |
-| `POST`   | `/api/transactions`                 | Create a transaction           |
-| `GET`    | `/api/transactions/{id}`            | Get a transaction by ID        |
-| `GET`    | `/api/transactions/account/{id}`    | List an account's transactions |
+| Method   | Endpoint                            | Description                    | Access    |
+| -------- | ----------------------------------- | ------------------------------ | --------- |
+| `POST`   | `/api/auth/register`                | Register a new user            | 🌐 Public |
+| `POST`   | `/api/auth/login`                   | Authenticate & receive a JWT   | 🌐 Public |
+| `GET`    | `/api/users`                        | List all users                 | 🛡️ ADMIN  |
+| `GET`    | `/api/users/{id}`                   | Get a user by ID               | 🔒 Token  |
+| `DELETE` | `/api/users/{id}`                   | Delete a user                  | 🔒 Token  |
+| `POST`   | `/api/accounts`                     | Open an account                | 🔒 Token  |
+| `GET`    | `/api/accounts/{id}`                | Get an account by ID           | 🔒 Token  |
+| `GET`    | `/api/accounts/user/{id}`           | List a user's accounts         | 🔒 Token  |
+| `DELETE` | `/api/accounts/{id}`                | Close an account               | 🔒 Token  |
+| `POST`   | `/api/transactions`                 | Create a transaction           | 🔒 Token  |
+| `GET`    | `/api/transactions/{id}`            | Get a transaction by ID        | 🔒 Token  |
+| `GET`    | `/api/transactions/account/{id}`    | List an account's transactions | 🔒 Token  |
+
+> 🌐 Public · 🔒 requires a valid JWT · 🛡️ requires the `ADMIN` role
 
 ---
 
