@@ -35,7 +35,9 @@ surface is documented interactively via **Swagger UI / OpenAPI** — complete wi
 - 💸 **Transactions** — deposits, withdrawals, and account-to-account transfers
 - 🔑 **JWT authentication** — stateless register/login issuing signed Bearer tokens (24h expiry)
 - 🛡️ **Role-based access control** — `USER` / `ADMIN` roles enforced per endpoint
+- 🙋 **Ownership checks** — users can only access their own accounts
 - 🔐 **Security** — passwords hashed with BCrypt, endpoints guarded by a JWT filter
+- 🧯 **Consistent error handling** — global `@RestControllerAdvice` with structured JSON errors
 - 📖 **Interactive API docs** — Swagger UI powered by springdoc OpenAPI
 - 🧱 **Clean architecture** — clear separation between web, service, and data layers
 - 📦 **DTO-driven API** — request/response models decoupled from JPA entities
@@ -79,14 +81,15 @@ User ──1───*── Account ──*───1── Transaction
 ```
 src/main/java/com/banking/api
 ├── BankingApiApplication.java     # Application entry point
-├── config/                        # Spring configuration (security, beans)
+├── config/                        # Spring configuration (security, OpenAPI, beans)
 ├── controller/                    # REST controllers (auth, users, accounts, transactions)
-├── security/                      # JWT service & authentication filter
+├── security/                      # JWT service, auth filter & user details
+├── exception/                     # Custom exceptions & global handler
 ├── model/                         # JPA entities & enums
 ├── repository/                    # Spring Data JPA repositories
 ├── service/                       # Service interfaces
 │   └── impl/                      # Service implementations
-└── dto/                           # Request/response DTOs (auth, user, account, transaction)
+└── dto/                           # Request/response DTOs (auth, user, account, transaction, error)
 ```
 
 ---
@@ -204,6 +207,29 @@ curl http://localhost:8080/api/accounts/1 \
 | `GET`    | `/api/transactions/account/{id}`    | List an account's transactions | 🔒 Token  |
 
 > 🌐 Public · 🔒 requires a valid JWT · 🛡️ requires the `ADMIN` role
+>
+> 🙋 Account endpoints are **ownership-scoped** — a user may only read their own accounts.
+
+---
+
+## 🧯 Error Handling
+
+All errors are funneled through a global `@RestControllerAdvice` and returned as a consistent
+JSON envelope, so clients always get the same predictable shape:
+
+```jsonc
+{
+  "timestamp": "2026-07-13T10:15:30",
+  "error": "Not Found",
+  "message": "Account not found with id: 42"
+}
+```
+
+| Exception                       | HTTP status         |
+| ------------------------------- | ------------------- |
+| `ResourceNotFoundException`     | `404 Not Found`     |
+| `AccountAccessDeniedException`  | `404 Not Found`     |
+| `BankingApiException` (base)    | `400 Bad Request`   |
 
 ---
 
