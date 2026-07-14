@@ -2,8 +2,11 @@ package com.banking.api.controller;
 
 import com.banking.api.dto.account.AccountRequestDTO;
 import com.banking.api.dto.account.AccountResponseDTO;
+import com.banking.api.model.User;
+import com.banking.api.security.CustomUserDetails;
 import com.banking.api.service.AccountService;
 import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,8 +27,9 @@ public class AccountController {
     }
 
     @GetMapping("/{id}")
-    public AccountResponseDTO getAccountById(@PathVariable Long id){
-        return accountService.getAccountById(id);
+    public AccountResponseDTO getAccountById(@PathVariable Long id, Authentication authentication){
+        User currentUser = ((CustomUserDetails) authentication.getPrincipal()).getUser();
+        return accountService.getAccountById(id,currentUser.getId());
     }
 
     @GetMapping("/user/{id}")

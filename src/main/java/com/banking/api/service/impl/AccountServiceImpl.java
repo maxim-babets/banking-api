@@ -2,6 +2,8 @@ package com.banking.api.service.impl;
 
 import com.banking.api.dto.account.AccountRequestDTO;
 import com.banking.api.dto.account.AccountResponseDTO;
+import com.banking.api.exception.AccountAccessDeniedException;
+import com.banking.api.exception.ResourceNotFoundException;
 import com.banking.api.model.Account;
 import com.banking.api.model.User;
 import com.banking.api.repository.AccountRepository;
@@ -56,8 +58,11 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public AccountResponseDTO getAccountById(Long id) {
-        Account account = accountRepository.findById(id).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found with id: " + id ));
+    public AccountResponseDTO getAccountById(Long id, Long currentUserId) {
+        Account account = accountRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Account not found with id: " + id ));
+        if (!account.getUser().getId().equals(currentUserId)){
+            throw  new AccountAccessDeniedException("Access Denied");
+        }
         return new AccountResponseDTO(account.getId(),account.getAccountNumber(),INSTITUTION_NUMBER,TRANSIT_NUMBER,account.getBalance(),account.getAccountType());
     }
 

@@ -9,7 +9,7 @@ public interface AccountService {
 
     AccountResponseDTO createAccount(AccountRequestDTO request);
 
-    AccountResponseDTO getAccountById(Long id);
+    AccountResponseDTO getAccountById(Long id,Long currentUserId);
 
     List<AccountResponseDTO> getAccountByUserId(Long id);
 
