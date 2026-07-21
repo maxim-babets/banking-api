@@ -231,7 +231,7 @@ JSON envelope, so clients always get the same predictable shape:
 | `AccountAccessDeniedException`  | `404 Not Found`     | Accessing an account you don't own    |
 | `ResourceAccessDeniedException` | `404 Not Found`     | Accessing a transaction you don't own |
 | `InsufficientFundsException`    | `400 Bad Request`   | Transfer amount exceeds balance       |
-| `InvalidCredentialsException`   | `400 Bad Request`   | Wrong email or password on login      |
+| `InvalidCredentialsException`   | `401 Unauthorized`  | Wrong email or password on login      |
 | `BankingApiException` (base)    | `400 Bad Request`   | Any other domain rule violation       |
 
 ---
