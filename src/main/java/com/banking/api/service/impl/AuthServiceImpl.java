@@ -29,12 +29,12 @@ public class AuthServiceImpl implements AuthService {
     }
 
     public LoginResponse login(LoginRequestDTO request){
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(()-> new InvalidCredentialsException("Email not found"));
+        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(()-> new InvalidCredentialsException("Invalid email or password"));
         String rawPassword = request.getPassword();
         String encodedPassword = user.getPassword();
         boolean isMatch = passwordEncoder.matches(rawPassword,encodedPassword);
         if(!isMatch) {
-            throw new InvalidCredentialsException("Wrong Password");
+            throw new InvalidCredentialsException("Invalid email or password");
         }
         return new LoginResponse(user.getId(),user.getEmail(), "Login successful", jwtService.generateToken(user.getEmail()));
         }
