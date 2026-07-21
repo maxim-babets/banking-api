@@ -32,10 +32,10 @@ surface is documented interactively via **Swagger UI / OpenAPI** — complete wi
 
 - 👤 **User management** — register, fetch, list, and delete users
 - 💳 **Account management** — checking & savings accounts linked to users
-- 💸 **Transactions** — deposits, withdrawals, and account-to-account transfers
+- 💸 **Transactions** — deposits, withdrawals, and transfers with balance validation
 - 🔑 **JWT authentication** — stateless register/login issuing signed Bearer tokens (24h expiry)
 - 🛡️ **Role-based access control** — `USER` / `ADMIN` roles enforced per endpoint
-- 🙋 **Ownership checks** — users can only access their own accounts
+- 🙋 **Ownership checks** — users can only access their own accounts and transactions
 - 🔐 **Security** — passwords hashed with BCrypt, endpoints guarded by a JWT filter
 - 🧯 **Consistent error handling** — global `@RestControllerAdvice` with structured JSON errors
 - 📖 **Interactive API docs** — Swagger UI powered by springdoc OpenAPI
@@ -208,7 +208,7 @@ curl http://localhost:8080/api/accounts/1 \
 
 > 🌐 Public · 🔒 requires a valid JWT · 🛡️ requires the `ADMIN` role
 >
-> 🙋 Account endpoints are **ownership-scoped** — a user may only read their own accounts.
+> 🙋 Account & transaction reads are **ownership-scoped** — a user may only access records tied to their own accounts.
 
 ---
 
@@ -225,11 +225,14 @@ JSON envelope, so clients always get the same predictable shape:
 }
 ```
 
-| Exception                       | HTTP status         |
-| ------------------------------- | ------------------- |
-| `ResourceNotFoundException`     | `404 Not Found`     |
-| `AccountAccessDeniedException`  | `404 Not Found`     |
-| `BankingApiException` (base)    | `400 Bad Request`   |
+| Exception                       | HTTP status         | Raised when…                          |
+| ------------------------------- | ------------------- | ------------------------------------- |
+| `ResourceNotFoundException`     | `404 Not Found`     | User / account / transaction missing  |
+| `AccountAccessDeniedException`  | `404 Not Found`     | Accessing an account you don't own    |
+| `ResourceAccessDeniedException` | `404 Not Found`     | Accessing a transaction you don't own |
+| `InsufficientFundsException`    | `400 Bad Request`   | Transfer amount exceeds balance       |
+| `InvalidCredentialsException`   | `400 Bad Request`   | Wrong email or password on login      |
+| `BankingApiException` (base)    | `400 Bad Request`   | Any other domain rule violation       |
 
 ---
 
