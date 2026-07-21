@@ -2,16 +2,15 @@ package com.banking.api.service.impl;
 
 import com.banking.api.dto.user.UserRequestDTO;
 import com.banking.api.dto.user.UserResponseDTO;
+import com.banking.api.exception.ResourceNotFoundException;
 import com.banking.api.model.RoleType;
 import com.banking.api.model.User;
 import com.banking.api.repository.AccountRepository;
 import com.banking.api.repository.UserRepository;
 import com.banking.api.service.UserService;
 import jakarta.transaction.Transactional;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -50,7 +49,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponseDTO getUserById(Long id) {
         User user  = userRepository.findById(id).orElseThrow(()->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, " User not found with id: " +  id));
+                new ResourceNotFoundException(" User not found with id: " +  id));
         return new UserResponseDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(),user.getRole());
     }
 
@@ -67,7 +66,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteUser(Long id) {
     User user = userRepository.findById(id)
-            .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,
+            .orElseThrow(()-> new ResourceNotFoundException(
                     "User not found with id: " + id));
     accountRepository.deleteByUserId(id);
     userRepository.delete(user);

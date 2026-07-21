@@ -9,9 +9,7 @@ import com.banking.api.model.User;
 import com.banking.api.repository.AccountRepository;
 import com.banking.api.repository.UserRepository;
 import com.banking.api.service.AccountService;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -41,7 +39,7 @@ public class AccountServiceImpl implements AccountService {
     public AccountResponseDTO createAccount(AccountRequestDTO request) {
         Account account = new Account();
         User user  = userRepository.findById(request.getUserId())
-                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                .orElseThrow(()-> new ResourceNotFoundException(
                         "User not found"));
         account.setUser(user);
         account.setAccountNumber(generateAccountNumber());
@@ -77,7 +75,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public void deleteAccount(Long id) {
         Account account = accountRepository.findById(id)
-                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"Account not found with id: " + id));
+                .orElseThrow(()-> new ResourceNotFoundException("Account not found with id: " + id));
         accountRepository.delete(account);
     }
 }

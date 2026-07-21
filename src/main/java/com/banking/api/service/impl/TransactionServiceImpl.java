@@ -2,15 +2,15 @@ package com.banking.api.service.impl;
 
 import com.banking.api.dto.transaction.TransactionRequestDTO;
 import com.banking.api.dto.transaction.TransactionResponseDTO;
+import com.banking.api.exception.InsufficientFundsException;
+import com.banking.api.exception.ResourceAccessDeniedException;
+import com.banking.api.exception.ResourceNotFoundException;
 import com.banking.api.model.Account;
 import com.banking.api.model.Transaction;
-import com.banking.api.model.TransactionType;
 import com.banking.api.repository.AccountRepository;
 import com.banking.api.repository.TransactionRepository;
 import com.banking.api.service.TransactionService;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,13 +32,13 @@ public class TransactionServiceImpl implements TransactionService {
     public TransactionResponseDTO createTransaction(TransactionRequestDTO request) {
         Transaction transaction = new Transaction();
         Account accountSender = accountRepository.findById(request.getFromAccountId())
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Account not found"));
+                .orElseThrow(()->new ResourceNotFoundException("Account not found"));
 
         Account accountReceiver = accountRepository.findById(request.getToAccountId())
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Account not found"));
+                .orElseThrow(()->new ResourceNotFoundException("Account not found"));
 
         if(accountSender.getBalance().compareTo(request.getAmount())<0){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insufficient funds");
+            throw new InsufficientFundsException("Insufficient funds");
         }
 
         accountSender.setBalance(accountSender.getBalance().subtract(request.getAmount()));
@@ -63,14 +63,21 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public TransactionResponseDTO getTransactionById(Long id) {
-        Transaction transaction = transactionRepository.findById(id).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,
+    public TransactionResponseDTO getTransactionById(Long id,Long currentUserId) {
+        Transaction transaction = transactionRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException(
                 "Transaction not found with id: " + id));
+        if(!(transaction.getFromAccount().getUser().getId().equals(currentUserId) || transaction.getToAccount().getUser().getId().equals(currentUserId))){
+            throw  new ResourceAccessDeniedException("Access Denied");
+        }
         return new TransactionResponseDTO(transaction.getId(),transaction.getAmount(), transaction.getTransactionType(),transaction.getFromAccount().getId(),transaction.getToAccount().getId(),transaction.getDateTime());
     }
 
     @Override
-    public List<TransactionResponseDTO> getTransactionByAccountId(Long id) {
+    public List<TransactionResponseDTO> getTransactionByAccountId(Long id,Long currentUserId) {
+        Account accountId = accountRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Account not found"));
+        if(!accountId.getUser().getId().equals(currentUserId)){
+            throw  new ResourceAccessDeniedException("Access Denied");
+        }
        List<Transaction> transactions = transactionRepository.findByFromAccountIdOrToAccountId(id,id);
 
        return transactions.stream()
